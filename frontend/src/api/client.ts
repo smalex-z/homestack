@@ -9,10 +9,16 @@ const api = axios.create({
   },
 })
 
-// Response interceptor: surface error messages from the API and redirect to
-// login on 401 (but not for auth endpoints, to avoid infinite redirect loops).
+// Unwrap the standard `{"success": true, "data": ...}` response envelope so
+// callers receive the inner payload directly (e.g. `User[]`, not `{success, data}`).
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const body = response.data
+    if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
+      response.data = body.data
+    }
+    return response
+  },
   (error) => {
     if (error.response?.status === 401 && !error.config?.url?.includes('/auth/')) {
       window.location.href = '/login'

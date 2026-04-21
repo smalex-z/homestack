@@ -70,7 +70,6 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          recreate: true
           path: test_summary.txt
 
       - name: Vet
