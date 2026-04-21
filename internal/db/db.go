@@ -28,6 +28,10 @@ func New(path string) (*DB, error) {
 	sqlDB.SetMaxOpenConns(1) // SQLite supports one writer at a time
 	sqlDB.SetMaxIdleConns(1)
 
+	if err := gormDB.Exec("PRAGMA foreign_keys = ON").Error; err != nil {
+		return nil, err
+	}
+
 	// Auto-migrate all models.
 	if err := gormDB.AutoMigrate(&User{}); err != nil {
 		return nil, err

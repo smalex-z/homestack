@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
+
+	"homestack/internal/api/response"
 )
 
 type healthResponse struct {
@@ -13,8 +14,7 @@ type healthResponse struct {
 
 // Health handles GET /api/health.
 func Health(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(healthResponse{
+	response.Success(w, healthResponse{
 		Status:    "ok",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"homestack/internal/api/response"
 	"homestack/internal/service"
 
 	"github.com/go-chi/chi/v5"
@@ -29,33 +30,30 @@ type createUserRequest struct {
 func (e *Example) ListUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := e.svc.ListUsers()
 	if err != nil {
-		http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+		response.InternalError(w, "internal server error")
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	response.Success(w, users)
 }
 
 // CreateUser handles POST /api/users.
 func (e *Example) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var req createUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
+		response.BadRequest(w, "invalid request body")
 		return
 	}
 	if req.Name == "" || req.Email == "" {
-		http.Error(w, `{"error":"name and email are required"}`, http.StatusBadRequest)
+		response.BadRequest(w, "name and email are required")
 		return
 	}
 
 	user, err := e.svc.CreateUser(req.Name, req.Email)
 	if err != nil {
-		http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+		response.InternalError(w, "internal server error")
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	response.Created(w, user)
 }
 
 // DeleteUser handles DELETE /api/users/{id}.
@@ -63,12 +61,12 @@ func (e *Example) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
+		response.BadRequest(w, "invalid id")
 		return
 	}
 	if err := e.svc.DeleteUser(uint(id)); err != nil {
-		http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
+		response.InternalError(w, "internal server error")
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	response.NoContent(w)
 }

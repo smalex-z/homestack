@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+
 	"homestack/internal/api/handlers"
 	"homestack/internal/service"
 
@@ -8,17 +10,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-// NewRouter builds and returns the application Chi router.
-func NewRouter(svc *service.ExampleService) *chi.Mux {
+// NewRouter builds and returns the application router.
+func NewRouter(svc *service.ExampleService) http.Handler {
 	r := chi.NewRouter()
 
-	// Global middleware
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(middleware.RequestID)
 	r.Use(corsMiddleware)
+	r.Use(loggingMiddleware)
+	r.Use(recoveryMiddleware)
 	r.Use(rateLimiter(100, 200))
 
-	// API routes
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/health", handlers.Health)
 

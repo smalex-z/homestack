@@ -1,18 +1,21 @@
 #!/bin/bash
 set -e
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
 echo "Building Homestack..."
 
-# Build frontend
-echo "→ Building frontend..."
-cd frontend
+echo "→ Installing frontend dependencies..."
+cd "$ROOT/frontend"
 npm ci
+
+echo "→ Building frontend..."
 npm run build
-cd ..
 
-# Build Go binary (static, no CGO)
 echo "→ Building Go binary..."
-CGO_ENABLED=0 go build -ldflags="-s -w" -o homestack ./cmd/server
+cd "$ROOT"
+VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
+CGO_ENABLED=0 go build -ldflags "-s -w -X homestack/internal/build.Version=${VERSION}" -o homestack ./cmd/server/...
 
-echo "✅ Build complete: ./homestack"
-echo "Run with: ./homestack"
+echo "✅ Build complete: $ROOT/homestack"
+echo "   Run with: ./homestack [--port 8080] [--db ./homestack.db]"
