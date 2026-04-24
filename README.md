@@ -21,20 +21,49 @@ make dev
 
 ### Production
 
-```bash
-# Build single binary
-./scripts/build.sh
-
-# Install as systemd service
-sudo ./scripts/install.sh
-```
-
-Or download a pre-built binary from [Releases](https://github.com/smalex-z/homestack/releases):
+**Download a pre-built binary from [Releases](https://github.com/smalex-z/homestack/releases):**
 
 ```bash
+# Stable
 wget https://github.com/smalex-z/homestack/releases/latest/download/homestack-linux-amd64
 chmod +x homestack-linux-amd64
-./homestack-linux-amd64
+
+# Specific version (including pre-releases)
+wget https://github.com/smalex-z/homestack/releases/download/v0.1.0-alpha.1/homestack-linux-amd64
+chmod +x homestack-linux-amd64
+```
+
+Verify your download against checksums on the [releases page](https://github.com/smalex-z/homestack/releases).
+
+**Or build from source:**
+
+```bash
+./scripts/build.sh
+```
+
+**Run:**
+
+```bash
+./homestack                  # start on :8080 (or PORT env var)
+./homestack --port 9090      # custom port
+./homestack --version        # print version
+```
+
+**Install as a systemd service (runs on boot, survives reboots):**
+
+```bash
+sudo ./scripts/install.sh
+
+# Service management
+sudo systemctl status homestack
+sudo systemctl restart homestack
+sudo journalctl -u homestack -f
+```
+
+**During development — hot-swap without re-installing:**
+
+```bash
+./scripts/reinstall.sh    # rebuild + swap binary in the running service
 ```
 
 ## Project Structure
@@ -48,7 +77,7 @@ homestack/
 │   ├── db/              # SQLite + GORM models
 │   ├── service/         # Business logic layer
 │   └── config/          # Environment-based configuration
-├── scripts/             # build.sh, dev.sh, install.sh
+├── scripts/             # build.sh, dev.sh, install.sh, reinstall.sh
 └── .github/workflows/   # test.yml, lint.yml, release.yml
 ```
 
@@ -90,6 +119,30 @@ All options are set via environment variables:
 | `GET`    | `/api/users`      | List all users       |
 | `POST`   | `/api/users`      | Create a user        |
 | `DELETE` | `/api/users/{id}` | Delete a user        |
+
+## Releases
+
+The release workflow triggers automatically on any `v*` tag and publishes binaries for `linux/amd64` and `linux/arm64`.
+
+**Versioning scheme:**
+
+| Tag format          | Type        | Notes                          |
+|---------------------|-------------|--------------------------------|
+| `v1.0.0`            | Stable      | Published as latest release    |
+| `v1.0.0-rc.1`       | Release candidate | Pre-release flag set    |
+| `v0.1.0-beta.1`     | Beta        | Pre-release flag set           |
+| `v0.1.0-alpha.1`    | Alpha       | Pre-release flag set           |
+
+**To cut a release:**
+
+```bash
+git tag v0.1.0-alpha.1
+git push --tags
+```
+
+The CI pipeline builds both architectures, generates a `SHA256SUMS.txt`, and publishes a GitHub release. Tags containing a hyphen (`-alpha`, `-beta`, `-rc`) are automatically marked as pre-releases.
+
+You can also trigger a release manually from the Actions tab using the `workflow_dispatch` input if the tag already exists.
 
 ## License
 

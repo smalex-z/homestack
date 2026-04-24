@@ -10,6 +10,7 @@ echo "Rebuilding $APP_NAME..."
 "$ROOT/scripts/build.sh"
 
 echo "Swapping binary..."
+sudo systemctl daemon-reload
 sudo systemctl stop "$APP_NAME"
 sudo cp "$ROOT/$APP_NAME" "$INSTALL_DIR/$APP_NAME"
 sudo chown "$APP_NAME:$APP_NAME" "$INSTALL_DIR/$APP_NAME"
