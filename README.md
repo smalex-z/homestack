@@ -12,20 +12,16 @@ Click **Use this template** on GitHub, then clone your new repo and run the rena
 git clone https://github.com/your-username/your-app.git
 cd your-app
 
-APP=your-app            # lowercase identifier: module path, binary name, systemd unit
-APP_TITLE="Your App"    # display name shown in the UI and log output
-GH_OWNER=your-username  # your GitHub account or org
+./scripts/rename.sh your-app
+```
 
-# The grep guard runs the rename only when you're at the template root, so a stray
-# run from your home directory can't rewrite unrelated files (e.g. the Go module cache).
-grep -q '^module homestack$' go.mod &&
-find . -not -path './.git/*' -not -path './node_modules/*' -type f \
-  \( -name '*.go' -o -name '*.sh' -o -name '*.yml' -o -name '*.json' -o -name '*.mod' \
-     -o -name '*.ts' -o -name '*.tsx' -o -name '*.html' -o -name 'Makefile' -o -name '.gitignore' \) \
-  -exec sed -i \
-    -e "s|smalex-z/homestack|$GH_OWNER/$APP|g" \
-    -e "s/homestack/$APP/g" \
-    -e "s/Homestack/$APP_TITLE/g" {} +
+`rename.sh` rewrites every `homestack` reference to your app name, derives a display
+name (`your-app` → `Your App`) and your GitHub owner (from the repo's git remote), then
+deletes itself. It refuses to run anywhere but the unmodified template root, so it can't
+clobber unrelated files. Override the derived values when they're not what you want:
+
+```bash
+./scripts/rename.sh your-app your-github-owner "Your App"
 ```
 
 ### What gets updated by the rename
