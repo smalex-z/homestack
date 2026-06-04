@@ -12,36 +12,46 @@ Click **Use this template** on GitHub, then clone your new repo and run the rena
 git clone https://github.com/your-username/your-app.git
 cd your-app
 
-# Replace every "homestack" reference with your app name (lowercase, no spaces)
-APP=your-app
+APP=your-app            # lowercase identifier: module path, binary name, systemd unit
+APP_TITLE="Your App"    # display name shown in the UI and log output
+GH_OWNER=your-username  # your GitHub account or org
+
+# The grep guard runs the rename only when you're at the template root, so a stray
+# run from your home directory can't rewrite unrelated files (e.g. the Go module cache).
+grep -q '^module homestack$' go.mod &&
 find . -not -path './.git/*' -not -path './node_modules/*' -type f \
-  \( -name '*.go' -o -name '*.sh' -o -name '*.yml' -o -name '*.json' -o -name '*.mod' \) \
-  -exec sed -i "s/homestack/$APP/g" {} +
-mv scripts/build.sh scripts/build.sh  # no rename needed — APP_NAME is read from the variable
+  \( -name '*.go' -o -name '*.sh' -o -name '*.yml' -o -name '*.json' -o -name '*.mod' \
+     -o -name '*.ts' -o -name '*.tsx' -o -name '*.html' -o -name 'Makefile' -o -name '.gitignore' \) \
+  -exec sed -i \
+    -e "s|smalex-z/homestack|$GH_OWNER/$APP|g" \
+    -e "s/homestack/$APP/g" \
+    -e "s/Homestack/$APP_TITLE/g" {} +
 ```
 
 ### What gets updated by the rename
 
-| File | What changes |
-|------|--------------|
+| File(s) | What changes |
+|---------|--------------|
 | `go.mod` | Module name: `module homestack` → `module your-app` |
-| `scripts/build.sh` | Binary output name and ldflags module path |
-| `scripts/install.sh` | `APP_NAME`, binary path, systemd unit name |
-| `scripts/reinstall.sh` | `APP_NAME` |
-| `.github/workflows/release.yml` | Binary artifact names (`homestack-linux-amd64` → `your-app-linux-amd64`) |
-| All `.go` import paths | `"homestack/internal/..."` → `"your-app/internal/..."` |
+| All `.go` files | Import paths and the `internal/build` version path |
+| `Makefile` / `.gitignore` | Binary names (`make clean` targets and ignore patterns) |
+| `scripts/*.sh` | `APP_NAME`, binary path, systemd unit name, and the `Building/Starting …` log strings |
+| `.github/workflows/*.yml` | Build output and release artifact names (`homestack-linux-amd64` → `your-app-linux-amd64`) |
 | `frontend/package.json` | Package name |
+| `frontend/**/*.{ts,tsx,html}` | Page title, header/footer branding, and the GitHub repo link |
 
 ### What to update manually
 
-These are content-specific and won't be right after a rename:
+These are content-specific and the rename can't get them right:
 
+- **`LICENSE`** — copyright holder still reads `smalex-z` (and the year)
+- **`USING_TEMPLATE.md`** — this template guide; delete it or rewrite it for your project
+- **`README.md`** — replace this file with your project's documentation
 - **`internal/config/config.go`** — env var names (`DB_PATH`, `PORT`, `CORS_ORIGIN`) and defaults
 - **`internal/db/`** — replace the example `users` table with your own models
 - **`internal/service/example.go`** and **`internal/api/handlers/example.go`** — replace with your business logic
 - **`internal/api/router.go`** — replace example routes with your own
-- **`README.md`** — replace this file with your project's documentation
-- **`frontend/src/`** — replace the example UI with your app
+- **`frontend/src/`** — replace the example UI (Dashboard, Settings, Layout) with your app
 
 ---
 
